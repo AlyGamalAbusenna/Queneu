@@ -7,11 +7,19 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2, VolumeX, ChevronRight, RotateCcw, Play } from 'lucide-react';
 
+// Helper to handle base URL correctly on GitHub Pages
+const getAssetPath = (path: string) => {
+  const base = import.meta.env.BASE_URL || './';
+  // Remove leading slash from path if it exists
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `${base}${cleanPath}`;
+};
+
 // Configuration for the 8 pages
 const PAGES = Array.from({ length: 8 }, (_, i) => ({
   id: i + 1,
-  imageSrc: `/assets/pages/page${i + 1}.jpeg`,
-  audioSrc: `/assets/audio/page${i + 1}.wav`,
+  imageSrc: getAssetPath(`assets/pages/page${i + 1}.jpeg`),
+  audioSrc: getAssetPath(`assets/audio/page${i + 1}.wav`),
 }));
 
 export default function App() {
@@ -225,8 +233,15 @@ export default function App() {
               className="max-w-full max-h-full object-contain z-10 shadow-2xl"
               referrerPolicy="no-referrer"
               onError={(e) => {
-                // Fallback for missing assets in demo
-                (e.target as HTMLImageElement).src = `https://picsum.photos/seed/portfolio${currentPage.id}/1920/1080`;
+                const target = e.target as HTMLImageElement;
+                console.error("Failed to load image:", target.src);
+                // If .jpeg fails, try .jpg automatically
+                if (target.src.endsWith('.jpeg')) {
+                  target.src = target.src.replace('.jpeg', '.jpg');
+                } else {
+                  // Final fallback to placeholder
+                  target.src = `https://picsum.photos/seed/portfolio${currentPage.id}/1920/1080`;
+                }
               }}
             />
             {/* Blurred background fallback for a premium feel */}
